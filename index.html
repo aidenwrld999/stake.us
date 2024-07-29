@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="https://i.ibb.co/2P5n2T2/favicon-V2.png" type="image/png">
+    <meta name="description" content="Play Mines Game on Stake (US). Test your luck with a grid of mines. Can you avoid them and win big?">
+    <meta name="keywords" content="Mines Game, Gambling, Stake (US), Game, Casino">
+    <meta name="author" content="aidenwrld">
+    <meta property="og:title" content="Stake (US) - Mines Game">
+    <meta property="og:description" content="Play Mines Game on Stake (US). Test your luck with a grid of mines. Can you avoid them and win big?">
+    <meta property="og:image" content="https://i.ibb.co/2P5n2T2/favicon-V2.png">
+    <meta property="og:url" content="https://example.com">
+    <meta property="og:type" content="website">
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="Stake (US) - Mines Game">
+    <meta property="twitter:description" content="Play Mines Game on Stake (US). Test your luck with a grid of mines. Can you avoid them and win big?">
+    <meta property="twitter:image" content="https://i.ibb.co/2P5n2T2/favicon-V2.png">
+    <meta property="twitter:url" content="https://example.com">
+    <title>Stake (US) - Mines Game</title>
+    <style>
+        body {
+            background-color: #0d1b2a;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #game-container {
+            display: flex;
+            background-color: #162a3a;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            width: 80%;
+            max-width: 1200px;
+        }
+
+        #control-panel {
+            margin-right: 20px;
+            padding: 20px;
+            background-color: #1e3a56;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 300px;
+        }
+
+        #grid-container {
+            display: grid;
+            gap: 10px;
+            flex: 1;
+            background-color: #162a3a;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .grid-cell {
+            width: 80px;
+            height: 80px;
+            background-color: #1e3a56;
+            border: 2px solid #2b4a6f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .grid-cell img {
+            width: 70%;
+            height: 70%;
+            object-fit: cover;
+            display: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .grid-cell.clicked img {
+            display: block;
+            opacity: 1;
+        }
+
+        @keyframes zoom {
+            0% {
+                transform: scale(1);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .grid-cell.clicked {
+            animation: zoom 0.3s ease forwards;
+            background-color: #00aaff;
+        }
+
+        .mine::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 0, 0, 0.5);
+            border-radius: 10px;
+        }
+
+        #start-button,
+        #cashout-button {
+            background-color: #4caf50;
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+
+        #start-button:hover,
+        #cashout-button:hover {
+            background-color: #45a049;
+        }
+
+        #message {
+            margin-top: 10px;
+            font-weight: bold;
+            text-align: center;
+            color: #ffcc00;
+        }
+
+        #balance {
+            background-color: #1e3a56;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        #multiplier {
+            margin-top: 10px;
+            font-size: 1.2em;
+            text-align: center;
+            color: #ffcc00;
+        }
+
+        input {
+            border: 2px solid #2b4a6f;
+            border-radius: 5px;
+            padding: 5px;
+            margin-top: 5px;
+            background-color: #162a3a;
+            color: white;
+            width: 100px;
+        }
+
+        label {
+            margin-top: 10px;
+        }
+
+        .disabled {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div id="game-container">
+        <div id="control-panel">
+            <img src="https://i.ibb.co/7WP9XLw/image-removebg-preview-11-1.png" alt="Mines Game Logo" style="width: 100px; margin-bottom: 20px;">
+            <label for="grid-size">Grid Size:</label>
+            <input type="number" id="grid-size" value="8" min="2" max="12"><br>
+            <label for="mines">Mines:</label>
+            <input type="number" id="mines" value="3" min="3"><br>
+            <label for="bet">Gamble Amount:</label>
+            <input type="number" id="bet" value="10" min="1"><br>
+            <button id="start-button">Start Game</button>
+            <button id="cashout-button" disabled>Cash Out</button>
+            <div id="multiplier">Multiplier: 1.00x</div>
+            <div id="message"></div>
+            <div id="balance">Balance: $100.00</div>
+            <div id="earnings">Potential Earnings: $0.00</div>
+        </div>
+        <div id="grid-container"></div>
+    </div>
+
+    <audio id="start-sound" src="https://drive.google.com/uc?export=download&id=1ead6uTtwMwryfr2lth85a17Xtef4soXL"></audio>
+    <audio id="diamond-sound" src="https://drive.google.com/uc?export=download&id=1W7QrV0TEq6qpFpYDsAypIaJ6dqVr9wHK"></audio>
+    <audio id="cashout-sound" src="https://drive.google.com/uc?export=download&id=15iA9IzK9mgp_AZG0S19JN2ALa-sJGUnS"></audio>
+    <audio id="bomb-sound" src="https://drive.google.com/uc?export=download&id=1fSU6wgMcJA-3o3DlCWcTxGu5Urz50u8M"></audio>
+
+    <script>
+        let balance = parseFloat(localStorage.getItem('balance')) || 100.00;
+        let mineCount;
+        let safeClicks = 0;
+        let betAmount = 10;
+        let gameActive = false;
+        let currentMultiplier = 1.00;
+        let potentialEarnings = 0.00;
+
+        function setBalance(amount) {
+            balance = amount;
+            updateBalanceDisplay();
+        }
+
+        function resetGridCells() {
+            const cells = document.querySelectorAll('.grid-cell');
+            cells.forEach(cell => {
+                cell.style.backgroundColor = '#1e3a56'; // Reset cell color
+                cell.querySelector('img').style.display = 'none'; // Hide images
+                cell.classList.remove('clicked', 'mine');
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const gridContainer = document.getElementById('grid-container');
+            const startButton = document.getElementById('start-button');
+            const cashoutButton = document.getElementById('cashout-button');
+            const multiplierDisplay = document.getElementById('multiplier');
+            const message = document.getElementById('message');
+            const balanceDisplay = document.getElementById('balance');
+            const betInput = document.getElementById('bet');
+            const earningsDisplay = document.getElementById('earnings');
+            const startSound = document.getElementById('start-sound');
+            const diamondSound = document.getElementById('diamond-sound');
+            const cashoutSound = document.getElementById('cashout-sound');
+            const bombSound = document.getElementById('bomb-sound');
+
+            function initializeGrid(size) {
+                gridContainer.innerHTML = '';
+                gridContainer.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+                gridContainer.style.width = size > 8 ? '60%' : '100%';
+
+                const totalCells = size * size;
+
+                for (let i = 0; i < totalCells; i++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('grid-cell');
+                    cell.dataset.mine = 'false';
+                    cell.dataset.clicked = 'false';
+
+                    const img = document.createElement('img');
+                    cell.appendChild(img);
+
+                    cell.addEventListener('click', () => {
+                        if (gameActive) {
+                            setTimeout(() => revealCell(cell), 100); // Delay for animation
+                        }
+                    });
+
+                    gridContainer.appendChild(cell);
+                }
+            }
+
+            function createGrid(size, mines) {
+                if (size > 12) {
+                    message.textContent = 'Grid size cannot be larger than 12x12';
+                    return;
+                }
+
+                const cells = document.querySelectorAll('.grid-cell');
+                safeClicks = 0;
+                mineCount = mines;
+                gameActive = true;
+                cashoutButton.disabled = true;
+                currentMultiplier = 1.00;
+                potentialEarnings = 0.00;
+
+                const totalCells = size * size;
+                const mineArray = Array(mines).fill(true).concat(Array(totalCells - mines).fill(false));
+                const shuffledMines = mineArray.sort(() => Math.random() - 0.5);
+
+                cells.forEach((cell, index) => {
+                    cell.dataset.mine = shuffledMines[index];
+                    cell.dataset.clicked = 'false';
+                    cell.classList.remove('clicked', 'mine');
+                    cell.querySelector('img').src = ''; // Clear the image source
+                    cell.querySelector('img').style.display = 'none'; // Ensure image is hidden
+                });
+            }
+
+            function revealCell(cell) {
+                if (!gameActive || cell.dataset.clicked === 'true') return;
+
+                cell.dataset.clicked = 'true';
+                cell.classList.add('clicked');
+
+                const img = cell.querySelector('img');
+                if (cell.dataset.mine === 'true') {
+                    cell.classList.add('mine');
+                    img.src = 'https://i.ibb.co/zsFYVrg/bomb.png';
+                    img.style.display = 'block';
+                    bombSound.play().catch(e => console.error('Bomb sound failed to play:', e));
+                    message.textContent = `Game Over! You clicked on a mine.`;
+                    gameActive = false;
+                    startButton.disabled = false;
+                    cashoutButton.disabled = true;
+                    revealAllCells();
+                } else {
+                    img.src = 'https://i.ibb.co/TWDxv1X/diamond.png'; // Correct image for safe cells
+                    img.style.display = 'block';
+                    cell.style.backgroundColor = '#00aaff';
+                    diamondSound.play().catch(e => console.error('Diamond sound failed to play:', e));
+                    safeClicks++;
+                    if (safeClicks >= 4) {
+                        cashoutButton.disabled = false;
+                    }
+                    updateMultiplier();
+                    updatePotentialEarnings();
+                    checkWin();
+                }
+            }
+
+            function revealAllCells() {
+                const cells = document.querySelectorAll('.grid-cell');
+                cells.forEach(cell => {
+                    if (cell.dataset.mine === 'true') {
+                        const img = cell.querySelector('img');
+                        cell.classList.add('mine');
+                        img.src = 'https://i.ibb.co/zsFYVrg/bomb.png';
+                        img.style.display = 'block';
+                    }
+                });
+            }
+
+            function updateMultiplier() {
+                const baseMultiplier = 0.1; // Adjust base multiplier as needed
+                currentMultiplier = (1 + baseMultiplier * safeClicks).toFixed(2);
+                multiplierDisplay.textContent = `Multiplier: ${currentMultiplier}x`;
+            }
+
+            function updatePotentialEarnings() {
+                potentialEarnings = betAmount * parseFloat(currentMultiplier);
+                earningsDisplay.textContent = `Potential Earnings: $${potentialEarnings.toFixed(2)}`;
+            }
+
+            function updateBalanceDisplay() {
+                balanceDisplay.textContent = `Balance: $${balance.toFixed(2)}`;
+                localStorage.setItem('balance', balance.toFixed(2));
+            }
+
+            function checkWin() {
+                const revealedCells = document.querySelectorAll('.grid-cell[style*="background-color: rgb(0, 170, 255)"]');
+                const totalCells = document.querySelectorAll('.grid-cell').length;
+
+                if (revealedCells.length === totalCells - mineCount) {
+                    message.textContent = 'Congratulations! You won!';
+                    gameActive = false;
+                    startButton.disabled = false;
+                    cashoutButton.disabled = true;
+                    balance += potentialEarnings;
+                    updateBalanceDisplay();
+                }
+            }
+
+            startButton.addEventListener('click', () => {
+                const gridSize = parseInt(document.getElementById('grid-size').value);
+                if (gridSize < 2 || gridSize > 12) {
+                    message.textContent = 'Grid size must be between 2 and 12';
+                    return;
+                }
+                const mineCountInput = parseInt(document.getElementById('mines').value);
+                if (mineCountInput < 3) {
+                    message.textContent = 'Minimum number of mines is 3!';
+                    return;
+                }
+                betAmount = parseFloat(betInput.value);
+                if (betAmount > balance) {
+                    message.textContent = 'Not enough balance to place that bet!';
+                    return;
+                }
+                balance -= betAmount;
+                updateBalanceDisplay();
+                initializeGrid(gridSize);
+                createGrid(gridSize, mineCountInput);
+                message.textContent = '';
+                startSound.play().catch(e => console.error('Start sound failed to play:', e));
+                startButton.disabled = true;
+            });
+
+            cashoutButton.addEventListener('click', () => {
+                if (safeClicks < 4) {
+                    message.textContent = 'You must click at least 4 boxes to cash out!';
+                    return;
+                }
+                message.textContent = `You cashed out with $${potentialEarnings.toFixed(2)}!`;
+                balance += potentialEarnings;
+                gameActive = false;
+                cashoutSound.play().catch(e => console.error('Cashout sound failed to play:', e));
+                startButton.disabled = false;
+                cashoutButton.disabled = true;
+                updateBalanceDisplay();
+            });
+
+            // Initial setup
+            initializeGrid(8); // Default grid size
+            updateBalanceDisplay();
+        });
+
+        // Override direct balance manipulation
+        Object.defineProperty(window, 'balance', {
+            set(value) {
+                if (typeof value === 'number' && value >= 0) {
+                    setBalance(value);
+                }
+            },
+            get() {
+                return balance;
+            },
+            configurable: false,
+            enumerable: true
+        });
+    </script>
+</body>
+
+</html>
